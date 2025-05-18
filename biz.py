@@ -2,7 +2,6 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
-import os
 
 st.title("Budget Planner – Daily Savings")
 
@@ -11,29 +10,6 @@ num_days = st.number_input("Number of Days", min_value=1, max_value=365, value=3
 total_money = st.number_input("Total Money to Save", min_value=1.0, value=1000.0)
 
 max_daily_saving = total_money / num_days  # max saving per day
-
-# Optional: Load savings from uploaded CSV
-st.subheader("Optional: Upload Your Own Daily Savings Plan (.csv)")
-uploaded_file = st.file_uploader("Upload CSV File", type=["csv"])
-
-use_uploaded = False
-if uploaded_file:
-    try:
-        user_df = pd.read_csv(uploaded_file)
-        if "Day" in user_df.columns and "Daily Savings" in user_df.columns:
-            user_df_sorted = user_df.sort_values(by="Day")
-            final_savings_array = np.zeros(num_days)
-            for _, row in user_df_sorted.iterrows():
-                day = int(row["Day"])
-                if 1 <= day <= num_days:
-                    final_savings_array[day - 1] = float(row["Daily Savings"])
-            st.session_state.final_savings_array = final_savings_array
-            use_uploaded = True
-            st.success("Custom savings data loaded from CSV.")
-        else:
-            st.error("CSV must contain 'Day' and 'Daily Savings' columns.")
-    except Exception as e:
-        st.error(f"Error reading file: {e}")
 
 # Session state to store user points
 if "points" not in st.session_state:
@@ -91,40 +67,31 @@ if st.button("Clear Points"):
     st.session_state.points = [(1, 0), (num_days, 0)]
     st.rerun()
 
-# Default calculation if not using uploaded data
-if not use_uploaded:
-    # Interpolate Daily Savings
-    daily_savings = np.zeros(num_days)
-    sorted_points = sorted(st.session_state.points, key=lambda x: x[0])
+# Interpolate Daily Savings
+daily_savings = np.zeros(num_days)
+sorted_points = sorted(st.session_state.points, key=lambda x: x[0])
 
-    for i in range(len(sorted_points) - 1):
-        x0, y0 = sorted_points[i]
-        x1, y1 = sorted_points[i + 1]
-        days = x1 - x0
-        if days == 0:
-            continue
-        slope = (y1 - y0) / days
-        for d in range(x0, x1):
-            daily_savings[d - 1] = y0 + slope * (d - x0)
+for i in range(len(sorted_points) - 1):
+    x0, y0 = sorted_points[i]
+    x1, y1 = sorted_points[i + 1]
+    days = x1 - x0
+    if days == 0:
+        continue
+    slope = (y1 - y0) / days
+    for d in range(x0, x1):
+        daily_savings[d - 1] = y0 + slope * (d - x0)
 
-    # Set final point
-    daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
+# Set final point
+daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 
-    # Clip interpolated savings within allowed daily max
-    raw_savings = np.clip(daily_savings, 0, max_daily_saving)
+# Clip interpolated savings within allowed daily max
+raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 
-    # Calculate adjustment per day to match total target sum
-    adjustment = (total_money - np.sum(raw_savings)) / num_days
+# Calculate adjustment per day to match total target sum
+adjustment = (total_money - np.sum(raw_savings)) / num_days
 
-    # Add adjustment evenly across all days
-    final_savings_array = raw_savings + adjustment
-
-    # Store for later use or export
-    st.session_state.final_savings_array = final_savings_array
-
-# Use stored version if it exists
-if "final_savings_array" in st.session_state:
-    final_savings_array = st.session_state.final_savings_array
+# Add adjustment evenly across all days
+final_savings_array = raw_savings + adjustment
 
 # Display adjusted daily savings
 st.subheader("Adjusted Daily Savings Plan")
@@ -159,18 +126,3 @@ styled_df = (
 st.write(styled_df)
 
 st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")
-
-# Allow user to download the current savings plan as CSV
-st.write(styled_df)
-
-st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")
-
-# Allow user to download the current savings plan as CSV
-csv = df_display.to_csv(index=False).encode('utf-8')
-st.download_button(
-    label="📥 Download Savings Plan as CSV",
-    data=csv,
-    file_name='daily_savings_plan.csv',
-    mime='text/csv'
-)
-
