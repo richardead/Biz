@@ -11,7 +11,7 @@ total_money = st.number_input("Total Zlotys to Save", min_value=1.0, value=1000.
 
 # Session state to store user points
 if "points" not in st.session_state:
-    st.session_state.points = [(0, 0), (num_days - 1, total_money)]
+    st.session_state.points = [(1, 0), (num_days, total_money)]  # Day 1 to Day N
 
 st.subheader("📈 Click to Add Points")
 
@@ -44,7 +44,7 @@ fig.update_layout(
     xaxis_title="Day",
     yaxis_title="Saved Money (Zloty)",
     xaxis=dict(
-        range=[0, num_days - 1],
+        range=[1, num_days],
         tickmode='array',
         tickvals=tick_days,
         ticktext=tick_labels,
@@ -58,7 +58,7 @@ fig.update_layout(
 # Step 3: Capture Click
 st.plotly_chart(fig, use_container_width=True)
 
-clicked_day = st.slider("Select Day to Add Point", 0, num_days - 1, 0)
+clicked_day = st.slider("Select Day to Add Point", 1, num_days, 1)
 clicked_money = st.slider("Select Money at that Day", 0.0, total_money, 0.0)
 
 if st.button("➕ Add Point"):
@@ -67,7 +67,7 @@ if st.button("➕ Add Point"):
         st.rerun()
 
 if st.button("🗑️ Clear Points"):
-    st.session_state.points = [(0, 0), (num_days - 1, total_money)]
+    st.session_state.points = [(1, 0), (num_days, total_money)]
     st.rerun()
 
 # Step 4: Interpolate Full Budget Plan
@@ -82,15 +82,15 @@ for i in range(len(sorted_points) - 1):
         continue
     slope = (y1 - y0) / days
     for d in range(x0, x1):
-        full_plan[d] = y0 + slope * (d - x0)
+        full_plan[d - 1] = y0 + slope * (d - x0)  # shift index to 0-based array
 
 # Final value
-full_plan[sorted_points[-1][0]] = sorted_points[-1][1]
+full_plan[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 
 # Display result
 st.subheader("📊 Daily Savings Plan")
 df = pd.DataFrame({
-    "Day": np.arange(num_days),
+    "Day": np.arange(1, num_days + 1),
     "Zlotys Saved": full_plan
 })
 st.line_chart(df.set_index("Day"))
