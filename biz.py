@@ -87,14 +87,38 @@ daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 # Clip interpolated savings within allowed daily max
 raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 
-# Calculate adjustment to match total target sum
-adjustment = (total_money - np.sum(raw_savings)) / num_days
+# Robust adjustment function to match total target sum exactly
+def adjust_savings_to_target(savings, target, daily_max):
+    savings = np.clip(savings, 0, daily_max)
+    diff = target - np.sum(savings)
+    adjusted = savings.copy()
+    
+    iteration = 0
+    while abs(diff) > 1e-6 and iteration < 100:
+        if diff > 0:
+            # Days that can increase
+            adjustable_idx = np.where(adjusted < daily_max)[0]
+        else:
+            # Days that can decrease
+            adjustable_idx = np.where(adjusted > 0)[0]
 
-# Add adjustment evenly across all days
-adjusted_savings = raw_savings + adjustment
+        if len(adjustable_idx) == 0:
+            # No more room to adjust
+            break
 
-# Clip again to ensure limits after adjustment
-adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
+        adjustment_per_day = diff / len(adjustable_idx)
+        adjusted[adjustable_idx] += adjustment_per_day
+
+        # Clip again to respect limits
+        adjusted = np.clip(adjusted, 0, daily_max)
+
+        diff = target - np.sum(adjusted)
+        iteration += 1
+    
+    return adjusted
+
+# Apply robust adjustment
+adjusted_savings = adjust_savings_to_target(raw_savings, total_money, max_daily_saving)
 
 # Display adjusted daily savings
 st.subheader("📊 Adjusted Daily Savings Plan")
@@ -104,18 +128,16 @@ df = pd.DataFrame({
 })
 st.line_chart(df.set_index("Day"))
 
-st.subheader("📥 Array of Daily Savings")
-# Display adjusted daily savings in a styled, scrollable table for easy tracking
+# Styled display for tracking daily savings
 st.subheader("📅 Daily Savings Tracker")
-
 df_display = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
     "Daily Savings (Zloty)": adjusted_savings.round(2)
 })
 
-# Style: alternate row colors and format currency
+# Style: alternate row colors and center-align
 def style_rows(row):
-    return ['background-color: #000000' for _ in row]
+    return ['background-color: white' for _ in row]
 
 styled_df = (
     df_display.style
@@ -129,6 +151,5 @@ styled_df = (
 )
 
 st.write(styled_df)
-
 
 st.markdown(f"**Total Saved:** {round(np.sum(adjusted_savings), 2)} Zloty (Target: {total_money})")
