@@ -9,14 +9,13 @@ st.title("💰 Budget Planner – Daily Savings")
 num_days = st.number_input("Number of Days", min_value=1, max_value=365, value=30)
 total_money = st.number_input("Total Zlotys to Save", min_value=1.0, value=1000.0)
 
+max_daily_saving = total_money / num_days  # max saving per day
+
 # Session state to store user points
 if "points" not in st.session_state:
-    st.session_state.points = [(1, 0), (num_days, 0)]  # Now values are DAILY savings, not cumulative
+    st.session_state.points = [(1, 0), (num_days, 0)]  # daily savings points
 
 st.subheader("📈 Click to Add Points")
-
-# Step 2: Display interactive chart
-fig = go.Figure()
 
 # Extract and sort points
 x_vals = [pt[0] for pt in st.session_state.points]
@@ -25,6 +24,7 @@ sorted_points = sorted(zip(x_vals, y_vals), key=lambda x: x[0])
 x_vals_sorted, y_vals_sorted = zip(*sorted_points)
 
 # Plot user points
+fig = go.Figure()
 fig.add_trace(go.Scatter(
     x=x_vals_sorted,
     y=y_vals_sorted,
@@ -53,11 +53,10 @@ fig.update_layout(
     height=500
 )
 
-# Step 3: Capture Click
 st.plotly_chart(fig, use_container_width=True)
 
 clicked_day = st.slider("Select Day to Add Point", 1, num_days, 1)
-clicked_money = st.slider("Money Saved on that Day", 0.0, total_money, 0.0)
+clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0)
 
 if st.button("➕ Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
@@ -68,7 +67,7 @@ if st.button("🗑️ Clear Points"):
     st.session_state.points = [(1, 0), (num_days, 0)]
     st.rerun()
 
-# Step 4: Interpolate Daily Savings
+# Interpolate Daily Savings
 daily_savings = np.zeros(num_days)
 sorted_points = sorted(st.session_state.points, key=lambda x: x[0])
 
@@ -85,11 +84,17 @@ for i in range(len(sorted_points) - 1):
 # Set final point
 daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 
-# Normalize to match total_money
+# Clip to limit daily savings
+daily_savings = np.clip(daily_savings, 0, max_daily_saving)
+
+# Normalize so total matches total_money
 adjustment = (total_money - np.sum(daily_savings)) / num_days
 normalized_savings = daily_savings + adjustment
 
-# Step 5: Show Result
+# Clip again after adjustment
+normalized_savings = np.clip(normalized_savings, 0, max_daily_saving)
+
+# Display adjusted daily savings
 st.subheader("📊 Adjusted Daily Savings Plan")
 df = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
@@ -100,5 +105,4 @@ st.line_chart(df.set_index("Day"))
 st.subheader("📥 Array of Daily Savings")
 st.code(normalized_savings.tolist(), language='python')
 
-# Optional total verification
 st.markdown(f"**Total Saved:** {round(np.sum(normalized_savings), 2)} Zloty (Target: {total_money})")
