@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-st.title("💰 Budget Planner")
+st.title("💰 Budget Planner – Daily Savings")
 
 # Step 1: Input Parameters
 num_days = st.number_input("Number of Days", min_value=1, max_value=365, value=30)
@@ -11,18 +11,16 @@ total_money = st.number_input("Total Zlotys to Save", min_value=1.0, value=1000.
 
 # Session state to store user points
 if "points" not in st.session_state:
-    st.session_state.points = [(1, 0), (num_days, total_money)]  # Day 1 to Day N
+    st.session_state.points = [(1, 0), (num_days, 0)]  # Now values are DAILY savings, not cumulative
 
 st.subheader("📈 Click to Add Points")
 
 # Step 2: Display interactive chart
 fig = go.Figure()
 
-# Initial points
+# Extract and sort points
 x_vals = [pt[0] for pt in st.session_state.points]
 y_vals = [pt[1] for pt in st.session_state.points]
-
-# Sort points
 sorted_points = sorted(zip(x_vals, y_vals), key=lambda x: x[0])
 x_vals_sorted, y_vals_sorted = zip(*sorted_points)
 
@@ -33,16 +31,16 @@ fig.add_trace(go.Scatter(
     mode='lines+markers',
     line=dict(color='blue'),
     marker=dict(size=10, color='red'),
-    name="Milestones"
+    name="Daily Savings Points"
 ))
 
 # Show only ticks on selected days
-tick_days = sorted(set(day for day, _ in st.session_state.points))
+tick_days = sorted(set(x_vals_sorted))
 tick_labels = [f"Day {d}" for d in tick_days]
 
 fig.update_layout(
     xaxis_title="Day",
-    yaxis_title="Saved Money (Zloty)",
+    yaxis_title="Money Saved per Day (Zloty)",
     xaxis=dict(
         range=[1, num_days],
         tickmode='array',
@@ -50,7 +48,7 @@ fig.update_layout(
         ticktext=tick_labels,
         tickangle=45
     ),
-    yaxis=dict(range=[0, total_money]),
+    yaxis=dict(range=[0, max(y_vals_sorted) * 1.2 + 1]),
     dragmode='drawopenpath',
     height=500
 )
@@ -59,7 +57,7 @@ fig.update_layout(
 st.plotly_chart(fig, use_container_width=True)
 
 clicked_day = st.slider("Select Day to Add Point", 1, num_days, 1)
-clicked_money = st.slider("Select Money at that Day", 0.0, total_money, 0.0)
+clicked_money = st.slider("Money Saved on that Day", 0.0, total_money, 0.0)
 
 if st.button("➕ Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
@@ -67,11 +65,11 @@ if st.button("➕ Add Point"):
         st.rerun()
 
 if st.button("🗑️ Clear Points"):
-    st.session_state.points = [(1, 0), (num_days, total_money)]
+    st.session_state.points = [(1, 0), (num_days, 0)]
     st.rerun()
 
-# Step 4: Interpolate Full Budget Plan
-full_plan = np.zeros(num_days)
+# Step 4: Interpolate Daily Savings
+daily_savings = np.zeros(num_days)
 sorted_points = sorted(st.session_state.points, key=lambda x: x[0])
 
 for i in range(len(sorted_points) - 1):
@@ -82,18 +80,25 @@ for i in range(len(sorted_points) - 1):
         continue
     slope = (y1 - y0) / days
     for d in range(x0, x1):
-        full_plan[d - 1] = y0 + slope * (d - x0)  # shift index to 0-based array
+        daily_savings[d - 1] = y0 + slope * (d - x0)
 
-# Final value
-full_plan[sorted_points[-1][0] - 1] = sorted_points[-1][1]
+# Set final point
+daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 
-# Display result
-st.subheader("📊 Daily Savings Plan")
+# Normalize to match total_money
+adjustment = (total_money - np.sum(daily_savings)) / num_days
+normalized_savings = daily_savings + adjustment
+
+# Step 5: Show Result
+st.subheader("📊 Adjusted Daily Savings Plan")
 df = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
-    "Zlotys Saved": full_plan
+    "Daily Savings": normalized_savings
 })
 st.line_chart(df.set_index("Day"))
 
 st.subheader("📥 Array of Daily Savings")
-st.code(full_plan.tolist(), language='python')
+st.code(normalized_savings.tolist(), language='python')
+
+# Optional total verification
+st.markdown(f"**Total Saved:** {round(np.sum(normalized_savings), 2)} Zloty (Target: {total_money})")
