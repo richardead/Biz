@@ -91,10 +91,7 @@ raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 
 # Add adjustment evenly across all days
-adjusted_savings = raw_savings + adjustment
-
-# Clip again to ensure limits after adjustment
-adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
+final_savings_array = raw_savings + adjustment
 
 # ➤ Store in a final array
 final_savings_array = adjusted_savings.copy()
