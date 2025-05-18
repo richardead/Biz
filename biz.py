@@ -1,4 +1,4 @@
-import streamlit as st
+    import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -87,7 +87,10 @@ daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 # Clip interpolated savings within allowed daily max
 raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 
-# Calculate adjustment to match total target sum
+# Clip interpolated savings within allowed daily max
+raw_savings = np.clip(daily_savings, 0, max_daily_saving)
+
+# Calculate adjustment per day to match total target sum
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 
 # Add adjustment evenly across all days
@@ -95,6 +98,21 @@ adjusted_savings = raw_savings + adjustment
 
 # Clip again to ensure limits after adjustment
 adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
+
+# Optional: iterative adjustment to better approach total_money within limits
+for _ in range(10):  # limit to 10 iterations to avoid infinite loops
+    current_sum = adjusted_savings.sum()
+    diff = total_money - current_sum
+    if abs(diff) < 1e-2:  # close enough
+        break
+    # distribute remaining difference only to values not at bounds
+    mask = (adjusted_savings > 0) & (adjusted_savings < max_daily_saving)
+    if not mask.any():
+        break  # no room to adjust further
+    adjustment = diff / mask.sum()
+    adjusted_savings[mask] += adjustment
+    adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
+
 
 # Display adjusted daily savings
 st.subheader("Adjusted Daily Savings Plan")
