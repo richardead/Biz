@@ -99,21 +99,6 @@ adjusted_savings = raw_savings + adjustment
 # Clip again to ensure limits after adjustment
 adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
 
-# Optional: iterative adjustment to better approach total_money within limits
-for _ in range(10):  # limit to 10 iterations to avoid infinite loops
-    current_sum = adjusted_savings.sum()
-    diff = total_money - current_sum
-    if abs(diff) < 1e-2:  # close enough
-        break
-    # distribute remaining difference only to values not at bounds
-    mask = (adjusted_savings > 0) & (adjusted_savings < max_daily_saving)
-    if not mask.any():
-        break  # no room to adjust further
-    adjustment = diff / mask.sum()
-    adjusted_savings[mask] += adjustment
-    adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
-
-
 # Display adjusted daily savings
 st.subheader("Adjusted Daily Savings Plan")
 df = pd.DataFrame({
