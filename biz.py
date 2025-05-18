@@ -36,10 +36,20 @@ fig.add_trace(go.Scatter(
     name="Milestones"
 ))
 
+# Show only ticks on selected days
+tick_days = sorted(set(day for day, _ in st.session_state.points))
+tick_labels = [f"Day {d}" for d in tick_days]
+
 fig.update_layout(
     xaxis_title="Day",
     yaxis_title="Saved Money (Zloty)",
-    xaxis=dict(range=[0, num_days - 1], tickmode='linear'),
+    xaxis=dict(
+        range=[0, num_days - 1],
+        tickmode='array',
+        tickvals=tick_days,
+        ticktext=tick_labels,
+        tickangle=45
+    ),
     yaxis=dict(range=[0, total_money]),
     dragmode='drawopenpath',
     height=500
