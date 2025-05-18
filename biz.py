@@ -38,6 +38,7 @@ fig.add_trace(go.Scatter(
 tick_days = sorted(set(x_vals_sorted))
 tick_labels = [f"Day {d}" for d in tick_days]
 
+max_y = max(y_vals_sorted) if y_vals_sorted else 0
 fig.update_layout(
     xaxis_title="Day",
     yaxis_title="Money Saved per Day (Zloty)",
@@ -48,15 +49,14 @@ fig.update_layout(
         ticktext=tick_labels,
         tickangle=45
     ),
-    yaxis=dict(range=[0, max(y_vals_sorted) * 1.2 + 1]),
-    dragmode='drawopenpath',
+    yaxis=dict(range=[0, max_y * 1.2 + 1 if max_y > 0 else max_daily_saving]),
     height=500
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
 clicked_day = st.slider("Select Day to Add Point", 1, num_days, 1)
-clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0)
+clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0, step=0.01)
 
 if st.button("➕ Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
@@ -96,22 +96,17 @@ def adjust_savings_to_target(savings, target, daily_max):
     iteration = 0
     while abs(diff) > 1e-6 and iteration < 100:
         if diff > 0:
-            # Days that can increase
             adjustable_idx = np.where(adjusted < daily_max)[0]
         else:
-            # Days that can decrease
             adjustable_idx = np.where(adjusted > 0)[0]
 
         if len(adjustable_idx) == 0:
-            # No more room to adjust
             break
 
         adjustment_per_day = diff / len(adjustable_idx)
         adjusted[adjustable_idx] += adjustment_per_day
 
-        # Clip again to respect limits
         adjusted = np.clip(adjusted, 0, daily_max)
-
         diff = target - np.sum(adjusted)
         iteration += 1
     
@@ -137,7 +132,8 @@ df_display = pd.DataFrame({
 
 # Style: alternate row colors and center-align
 def style_rows(row):
-    return ['background-color: #000000' for _ in row]
+    color = '#f0f0f0' if row.name % 2 == 0 else 'white'
+    return ['background-color: {}'.format(color) for _ in row]
 
 styled_df = (
     df_display.style
