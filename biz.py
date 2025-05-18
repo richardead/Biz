@@ -126,3 +126,27 @@ styled_df = (
 st.write(styled_df)
 
 st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")
+
+import os
+
+SAVE_PATH = "saved_savings.npy"
+
+st.subheader("Save or Load Your Plan")
+
+# Save button
+if st.button("Save Plan"):
+    np.save(SAVE_PATH, final_savings_array)
+    st.success("Plan saved successfully!")
+
+# Load button
+if st.button("Load Saved Plan"):
+    if os.path.exists(SAVE_PATH):
+        loaded_array = np.load(SAVE_PATH)
+        st.session_state.final_savings_array = loaded_array
+        st.success("Saved plan loaded!")
+    else:
+        st.warning("No saved plan found.")
+
+# Use loaded plan if exists in session state
+if "final_savings_array" in st.session_state:
+    final_savings_array = st.session_state.final_savings_array
