@@ -54,11 +54,11 @@ clicked_money = st.slider("Select Money at that Day", 0.0, total_money, 0.0)
 if st.button("➕ Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
         st.session_state.points.append((clicked_day, clicked_money))
-        st.experimental_rerun()
+        st.rerun()
 
 if st.button("🗑️ Clear Points"):
     st.session_state.points = [(0, 0), (num_days - 1, total_money)]
-    st.experimental_rerun()
+    st.rerun()
 
 # Step 4: Interpolate Full Budget Plan
 full_plan = np.zeros(num_days)
