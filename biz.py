@@ -61,11 +61,11 @@ clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0)
 if st.button("Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
         st.session_state.points.append((clicked_day, clicked_money))
-        st.rerun()
+        st.experimental_rerun()
 
 if st.button("Clear Points"):
     st.session_state.points = [(1, 0), (num_days, 0)]
-    st.rerun()
+    st.experimental_rerun()
 
 # Interpolate Daily Savings
 daily_savings = np.zeros(num_days)
@@ -91,7 +91,7 @@ raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 
 # Add adjustment evenly across all days
-adjusted_savings = raw_savings + adjustment * num_days
+adjusted_savings = raw_savings + adjustment
 
 # Clip again to ensure limits after adjustment
 adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
@@ -104,8 +104,6 @@ df = pd.DataFrame({
 })
 st.line_chart(df.set_index("Day"))
 
-st.subheader("Array of Daily Savings")
-# Display adjusted daily savings in a styled, scrollable table for easy tracking
 st.subheader("Daily Savings Tracker")
 
 df_display = pd.DataFrame({
@@ -115,7 +113,7 @@ df_display = pd.DataFrame({
 
 # Style: alternate row colors and format currency
 def style_rows(row):
-    return ['background-color: #000000' for _ in row]
+    return ['background-color: #f0f0f0' if row.name % 2 == 0 else 'background-color: white' for _ in row]
 
 styled_df = (
     df_display.style
@@ -130,8 +128,4 @@ styled_df = (
 
 st.write(styled_df)
 
-total_savings = 0
-for i in range(num_days):
-    total_savings += adjusted_savings[i]
-
-st.markdown(f"**Total Saved:** {round(np.sum(adjusted_savings), 2)} Zloty (Target: {total_money})")
+st.markdown(f"**Total Saved:** {adjusted_savings.sum():.2f} Zloty (Target: {total_money})")
