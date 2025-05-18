@@ -91,7 +91,7 @@ raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 
 # Add adjustment evenly across all days
-adjusted_savings = raw_savings + adjustment
+adjusted_savings = raw_savings + adjustment * num_days
 
 # Clip again to ensure limits after adjustment
 adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
@@ -130,5 +130,8 @@ styled_df = (
 
 st.write(styled_df)
 
+total_savings = 0
+for (i in range num_days):
+    total_savings += adjusted_savings[i]
 
 st.markdown(f"**Total Saved:** {round(np.sum(adjusted_savings), 2)} Zloty (Target: {total_money})")
