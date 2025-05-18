@@ -61,11 +61,11 @@ clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0)
 if st.button("Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
         st.session_state.points.append((clicked_day, clicked_money))
-        st.experimental_rerun()
+        st.rerun()
 
 if st.button("Clear Points"):
     st.session_state.points = [(1, 0), (num_days, 0)]
-    st.experimental_rerun()
+    st.rerun()
 
 # Interpolate Daily Savings
 daily_savings = np.zeros(num_days)
