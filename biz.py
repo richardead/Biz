@@ -84,25 +84,27 @@ for i in range(len(sorted_points) - 1):
 # Set final point
 daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 
-# Clip to limit daily savings
-daily_savings = np.clip(daily_savings, 0, max_daily_saving)
+# Clip interpolated savings within allowed daily max
+raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 
-# Normalize so total matches total_money
-adjustment = (total_money - np.sum(daily_savings)) / num_days
-normalized_savings = daily_savings + adjustment
+# Calculate adjustment to match total target sum
+adjustment = (total_money - np.sum(raw_savings)) / num_days
 
-# Clip again after adjustment
-normalized_savings = np.clip(normalized_savings, 0, max_daily_saving)
+# Add adjustment evenly across all days
+adjusted_savings = raw_savings + adjustment
+
+# Clip again to ensure limits after adjustment
+adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
 
 # Display adjusted daily savings
 st.subheader("📊 Adjusted Daily Savings Plan")
 df = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
-    "Daily Savings": normalized_savings
+    "Daily Savings": adjusted_savings
 })
 st.line_chart(df.set_index("Day"))
 
 st.subheader("📥 Array of Daily Savings")
-st.code(normalized_savings.tolist(), language='python')
+st.code(adjusted_savings.tolist(), language='python')
 
-st.markdown(f"**Total Saved:** {round(np.sum(normalized_savings), 2)} Zloty (Target: {total_money})")
+st.markdown(f"**Total Saved:** {round(np.sum(adjusted_savings), 2)} Zloty (Target: {total_money})")
