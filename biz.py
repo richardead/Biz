@@ -93,9 +93,6 @@ adjustment = (total_money - np.sum(raw_savings)) / num_days
 # Add adjustment evenly across all days
 final_savings_array = raw_savings + adjustment
 
-# ➤ Store in a final array
-final_savings_array = adjusted_savings.copy()
-
 # Display adjusted daily savings
 st.subheader("Adjusted Daily Savings Plan")
 df = pd.DataFrame({
