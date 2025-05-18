@@ -131,7 +131,7 @@ styled_df = (
 st.write(styled_df)
 
 total_savings = 0
-for i in range num_days:
+for i in range(num_days):
     total_savings += adjusted_savings[i]
 
 st.markdown(f"**Total Saved:** {round(np.sum(adjusted_savings), 2)} Zloty (Target: {total_money})")
