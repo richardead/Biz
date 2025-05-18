@@ -2,8 +2,30 @@ import streamlit as st
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
+import os
 
 st.title("Budget Planner – Daily Savings")
+
+SAVE_FILE = "saved_points.csv"
+
+# Functions to save/load points persistently
+def save_points(points):
+    df = pd.DataFrame(points, columns=["Day", "Savings"])
+    df.to_csv(SAVE_FILE, index=False)
+
+def load_points():
+    if os.path.exists(SAVE_FILE):
+        df = pd.read_csv(SAVE_FILE)
+        return list(zip(df["Day"], df["Savings"]))
+    return None
+
+# Load saved points or initialize default
+if "points" not in st.session_state:
+    loaded_points = load_points()
+    if loaded_points is not None:
+        st.session_state.points = loaded_points
+    else:
+        st.session_state.points = [(1, 0), (30, 0)]  # default with 30 days
 
 # Step 1: Input Parameters
 num_days = st.number_input("Number of Days", min_value=1, max_value=365, value=30)
@@ -11,9 +33,17 @@ total_money = st.number_input("Total Money to Save", min_value=1.0, value=1000.0
 
 max_daily_saving = total_money / num_days  # max saving per day
 
-# Session state to store user points
-if "points" not in st.session_state:
-    st.session_state.points = [(1, 0), (num_days, 0)]  # daily savings points
+# Adjust points if num_days changed
+# Remove points beyond num_days, add end point if missing
+def adjust_points(points, max_day):
+    points = [pt for pt in points if pt[0] <= max_day]
+    days = [pt[0] for pt in points]
+    if max_day not in days:
+        points.append((max_day, 0))
+    points = sorted(points, key=lambda x: x[0])
+    return points
+
+st.session_state.points = adjust_points(st.session_state.points, num_days)
 
 st.subheader("Add Points")
 
@@ -61,11 +91,20 @@ clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0)
 if st.button("Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
         st.session_state.points.append((clicked_day, clicked_money))
-        st.rerun()
+        st.session_state.points = sorted(st.session_state.points, key=lambda x: x[0])
+        save_points(st.session_state.points)
+        st.experimental_rerun()
 
 if st.button("Clear Points"):
     st.session_state.points = [(1, 0), (num_days, 0)]
-    st.rerun()
+    save_points(st.session_state.points)
+    st.experimental_rerun()
+
+if st.button("Reset Saved Plan"):
+    if os.path.exists(SAVE_FILE):
+        os.remove(SAVE_FILE)
+    st.session_state.points = [(1, 0), (num_days, 0)]
+    st.experimental_rerun()
 
 # Interpolate Daily Savings
 daily_savings = np.zeros(num_days)
