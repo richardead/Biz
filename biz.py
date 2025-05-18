@@ -105,6 +105,30 @@ df = pd.DataFrame({
 st.line_chart(df.set_index("Day"))
 
 st.subheader("📥 Array of Daily Savings")
-st.code(adjusted_savings.tolist(), language='python')
+# Display adjusted daily savings in a styled, scrollable table for easy tracking
+st.subheader("📅 Daily Savings Tracker")
+
+df_display = pd.DataFrame({
+    "Day": np.arange(1, num_days + 1),
+    "Daily Savings (Zloty)": adjusted_savings.round(2)
+})
+
+# Style: alternate row colors and format currency
+def style_rows(row):
+    return ['background-color: #f9f9f9' if row.name % 2 == 0 else '' for _ in row]
+
+styled_df = (
+    df_display.style
+    .apply(style_rows, axis=1)
+    .format({"Daily Savings (Zloty)": "₺{:.2f}"})
+    .set_table_styles([
+        {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},
+        {"selector": "td", "props": [("text-align", "center")]},
+    ])
+    .set_properties(**{"max-height": "400px", "overflow-y": "auto", "display": "block"})
+)
+
+st.write(styled_df)
+
 
 st.markdown(f"**Total Saved:** {round(np.sum(adjusted_savings), 2)} Zloty (Target: {total_money})")
