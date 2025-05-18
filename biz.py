@@ -93,18 +93,18 @@ if st.button("Add Point"):
         st.session_state.points.append((clicked_day, clicked_money))
         st.session_state.points = sorted(st.session_state.points, key=lambda x: x[0])
         save_points(st.session_state.points)
-        st.experimental_rerun()
+        st.rerun()
 
 if st.button("Clear Points"):
     st.session_state.points = [(1, 0), (num_days, 0)]
     save_points(st.session_state.points)
-    st.experimental_rerun()
+    st.rerun()
 
 if st.button("Reset Saved Plan"):
     if os.path.exists(SAVE_FILE):
         os.remove(SAVE_FILE)
     st.session_state.points = [(1, 0), (num_days, 0)]
-    st.experimental_rerun()
+    st.rerun()
 
 # Interpolate Daily Savings
 daily_savings = np.zeros(num_days)
