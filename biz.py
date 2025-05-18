@@ -1,60 +1,89 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
+import pandas as pd
+import plotly.graph_objects as go
 
-st.set_page_config(layout="wide")
-st.title("🖍️ Rysowanie funkcji i normalizacja")
+st.title("💰 Budget Planner")
 
-st.markdown("""
-Wprowadź punkty funkcji ręcznie (przynajmniej 2 punkty, bez powtórzeń w osi X).<br>
-Aplikacja pobierze z niej 80 próbek, znormalizuje do żądanej sumy, i pokaże wynik.
-""", unsafe_allow_html=True)
+# Step 1: Input Parameters
+num_days = st.number_input("Number of Days", min_value=1, max_value=365, value=30)
+total_money = st.number_input("Total Zlotys to Save", min_value=1.0, value=1000.0)
 
-# Suwaki do ustawienia zakresu
-col1, col2 = st.columns(2)
-with col1:
-    y_min = st.slider("Minimalna wartość funkcji", -100.0, 100.0, 0.0)
-with col2:
-    y_max = st.slider("Maksymalna wartość funkcji", -100.0, 100.0, 1.0)
+# Session state to store user points
+if "points" not in st.session_state:
+    st.session_state.points = [(0, 0), (num_days - 1, total_money)]
 
-# Edytowalna tabela punktów
-st.subheader("🔹 Wprowadź punkty funkcji")
-default_points = {
-    "x": [0.0, 0.5, 1.0],
-    "y": [0.0, 0.8, 0.0]
-}
-points_df = st.data_editor(default_points, num_rows="dynamic", use_container_width=True)
+st.subheader("📈 Click to Add Points")
 
-if len(points_df["x"]) < 2:
-    st.warning("Dodaj co najmniej dwa punkty.")
-    st.stop()
+# Step 2: Display interactive chart
+fig = go.Figure()
 
-# Przetwarzanie danych
-x = np.array(points_df["x"])
-y = np.array(points_df["y"])
-sort_idx = np.argsort(x)
-x = x[sort_idx]
-y = y[sort_idx]
+# Initial points
+x_vals = [pt[0] for pt in st.session_state.points]
+y_vals = [pt[1] for pt in st.session_state.points]
 
-# Próbkowanie
-x_sample = np.linspace(np.min(x), np.max(x), 80)
-y_sample = np.interp(x_sample, x, y)
+# Sort points
+sorted_points = sorted(zip(x_vals, y_vals), key=lambda x: x[0])
+x_vals_sorted, y_vals_sorted = zip(*sorted_points)
 
-# Normalizacja
-sum_before = np.sum(y_sample)
-desired_sum = st.number_input("Pożądana suma próbek", value=float(sum_before))
-offset = (desired_sum - sum_before) / 80
-y_normalized = y_sample + offset
+# Plot user points
+fig.add_trace(go.Scatter(
+    x=x_vals_sorted,
+    y=y_vals_sorted,
+    mode='lines+markers',
+    line=dict(color='blue'),
+    marker=dict(size=10, color='red'),
+    name="Milestones"
+))
 
-# Wykres
-fig, ax = plt.subplots(figsize=(10, 4))
-ax.plot(x, y, 'bo-', label="Oryginalna funkcja")
-ax.plot(x_sample, y_normalized, 'g-', label="Znormalizowane próbki (80)")
-ax.axhline(y=0, color='gray', linestyle='--', linewidth=0.5)
-ax.legend()
-ax.set_title("Porównanie funkcji i próbek")
-ax.set_ylim(y_min - 1, y_max + 1)
-st.pyplot(fig)
+fig.update_layout(
+    xaxis_title="Day",
+    yaxis_title="Saved Money (Zloty)",
+    xaxis=dict(range=[0, num_days - 1], tickmode='linear'),
+    yaxis=dict(range=[0, total_money]),
+    dragmode='drawopenpath',
+    height=500
+)
 
-# Wyniki
-st.write(f"🔸 Suma przed: `{sum_before:.2f}`, offset: `{offset:.4f}`, suma po: `{np.sum(y_normalized):.2f}`")
+# Step 3: Capture Click
+st.plotly_chart(fig, use_container_width=True)
+
+clicked_day = st.slider("Select Day to Add Point", 0, num_days - 1, 0)
+clicked_money = st.slider("Select Money at that Day", 0.0, total_money, 0.0)
+
+if st.button("➕ Add Point"):
+    if (clicked_day, clicked_money) not in st.session_state.points:
+        st.session_state.points.append((clicked_day, clicked_money))
+        st.experimental_rerun()
+
+if st.button("🗑️ Clear Points"):
+    st.session_state.points = [(0, 0), (num_days - 1, total_money)]
+    st.experimental_rerun()
+
+# Step 4: Interpolate Full Budget Plan
+full_plan = np.zeros(num_days)
+sorted_points = sorted(st.session_state.points, key=lambda x: x[0])
+
+for i in range(len(sorted_points) - 1):
+    x0, y0 = sorted_points[i]
+    x1, y1 = sorted_points[i + 1]
+    days = x1 - x0
+    if days == 0:
+        continue
+    slope = (y1 - y0) / days
+    for d in range(x0, x1):
+        full_plan[d] = y0 + slope * (d - x0)
+
+# Final value
+full_plan[sorted_points[-1][0]] = sorted_points[-1][1]
+
+# Display result
+st.subheader("📊 Daily Savings Plan")
+df = pd.DataFrame({
+    "Day": np.arange(num_days),
+    "Zlotys Saved": full_plan
+})
+st.line_chart(df.set_index("Day"))
+
+st.subheader("📥 Array of Daily Savings")
+st.code(full_plan.tolist(), language='python')
