@@ -131,7 +131,7 @@ df_display = pd.DataFrame({
 
 # Style: alternate row colors and format currency
 def style_rows(row):
-    return ['background-color: #f0f0f0' if row.name % 2 == 0 else 'background-color: white' for _ in row]
+    return ['background-color: #000000' for _ in row]
 
 styled_df = (
     df_display.style
