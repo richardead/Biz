@@ -3,11 +3,11 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 
-st.title("💰 Budget Planner – Daily Savings")
+st.title("Budget Planner – Daily Savings")
 
 # Step 1: Input Parameters
 num_days = st.number_input("Number of Days", min_value=1, max_value=365, value=30)
-total_money = st.number_input("Total Zlotys to Save", min_value=1.0, value=1000.0)
+total_money = st.number_input("Total Money to Save", min_value=1.0, value=1000.0)
 
 max_daily_saving = total_money / num_days  # max saving per day
 
@@ -91,7 +91,7 @@ raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 
 # Add adjustment evenly across all days
-adjusted_savings = raw_savings + adjustment
+adjusted_savings = raw_savings + adjustment * num_days
 
 # Clip again to ensure limits after adjustment
 adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
