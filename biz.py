@@ -15,7 +15,7 @@ max_daily_saving = total_money / num_days  # max saving per day
 if "points" not in st.session_state:
     st.session_state.points = [(1, 0), (num_days, 0)]  # daily savings points
 
-st.subheader("📈 Click to Add Points")
+st.subheader("Add Points")
 
 # Extract and sort points
 x_vals = [pt[0] for pt in st.session_state.points]
@@ -58,12 +58,12 @@ st.plotly_chart(fig, use_container_width=True)
 clicked_day = st.slider("Select Day to Add Point", 1, num_days, 1)
 clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0)
 
-if st.button("➕ Add Point"):
+if st.button("Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
         st.session_state.points.append((clicked_day, clicked_money))
         st.rerun()
 
-if st.button("🗑️ Clear Points"):
+if st.button("Clear Points"):
     st.session_state.points = [(1, 0), (num_days, 0)]
     st.rerun()
 
@@ -91,22 +91,22 @@ raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 
 # Add adjustment evenly across all days
-adjusted_savings = raw_savings + adjustment * num_days
+adjusted_savings = raw_savings + adjustment
 
 # Clip again to ensure limits after adjustment
 adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
 
 # Display adjusted daily savings
-st.subheader("📊 Adjusted Daily Savings Plan")
+st.subheader("Adjusted Daily Savings Plan")
 df = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
     "Daily Savings": adjusted_savings
 })
 st.line_chart(df.set_index("Day"))
 
-st.subheader("📥 Array of Daily Savings")
+st.subheader("Array of Daily Savings")
 # Display adjusted daily savings in a styled, scrollable table for easy tracking
-st.subheader("📅 Daily Savings Tracker")
+st.subheader("Daily Savings Tracker")
 
 df_display = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
