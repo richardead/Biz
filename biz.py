@@ -120,7 +120,7 @@ def style_rows(row):
 styled_df = (
     df_display.style
     .apply(style_rows, axis=1)
-    .format({"Daily Savings (Zloty)": "₺{:.2f}"})
+    .format({"Daily Savings (Zloty)": "{:.2f}"})
     .set_table_styles([
         {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},
         {"selector": "td", "props": [("text-align", "center")]},
