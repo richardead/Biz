@@ -159,3 +159,13 @@ styled_df = (
 st.write(styled_df)
 
 st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")
+
+# Allow user to download the current savings plan as CSV
+csv = df_display.to_csv(index=False).encode('utf-8')
+st.download_button(
+    label="📥 Download Savings Plan as CSV",
+    data=csv,
+    file_name='daily_savings_plan.csv',
+    mime='text/csv'
+)
+
