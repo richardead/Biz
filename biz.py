@@ -38,7 +38,6 @@ fig.add_trace(go.Scatter(
 tick_days = sorted(set(x_vals_sorted))
 tick_labels = [f"Day {d}" for d in tick_days]
 
-max_y = max(y_vals_sorted) if y_vals_sorted else 0
 fig.update_layout(
     xaxis_title="Day",
     yaxis_title="Money Saved per Day (Zloty)",
@@ -49,14 +48,15 @@ fig.update_layout(
         ticktext=tick_labels,
         tickangle=45
     ),
-    yaxis=dict(range=[0, max_y * 1.2 + 1 if max_y > 0 else max_daily_saving]),
+    yaxis=dict(range=[0, max(y_vals_sorted) * 1.2 + 1]),
+    dragmode='drawopenpath',
     height=500
 )
 
 st.plotly_chart(fig, use_container_width=True)
 
 clicked_day = st.slider("Select Day to Add Point", 1, num_days, 1)
-clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0, step=0.01)
+clicked_money = st.slider("Money Saved on that Day", 0.0, max_daily_saving, 0.0)
 
 if st.button("➕ Add Point"):
     if (clicked_day, clicked_money) not in st.session_state.points:
@@ -87,33 +87,14 @@ daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 # Clip interpolated savings within allowed daily max
 raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 
-# Robust adjustment function to match total target sum exactly
-def adjust_savings_to_target(savings, target, daily_max):
-    savings = np.clip(savings, 0, daily_max)
-    diff = target - np.sum(savings)
-    adjusted = savings.copy()
-    
-    iteration = 0
-    while abs(diff) > 1e-6 and iteration < 100:
-        if diff > 0:
-            adjustable_idx = np.where(adjusted < daily_max)[0]
-        else:
-            adjustable_idx = np.where(adjusted > 0)[0]
+# Calculate adjustment to match total target sum
+adjustment = (total_money - np.sum(raw_savings)) / num_days
 
-        if len(adjustable_idx) == 0:
-            break
+# Add adjustment evenly across all days
+adjusted_savings = raw_savings + adjustment
 
-        adjustment_per_day = diff / len(adjustable_idx)
-        adjusted[adjustable_idx] += adjustment_per_day
-
-        adjusted = np.clip(adjusted, 0, daily_max)
-        diff = target - np.sum(adjusted)
-        iteration += 1
-    
-    return adjusted
-
-# Apply robust adjustment
-adjusted_savings = adjust_savings_to_target(raw_savings, total_money, max_daily_saving)
+# Clip again to ensure limits after adjustment
+adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
 
 # Display adjusted daily savings
 st.subheader("📊 Adjusted Daily Savings Plan")
@@ -123,17 +104,18 @@ df = pd.DataFrame({
 })
 st.line_chart(df.set_index("Day"))
 
-# Styled display for tracking daily savings
+st.subheader("📥 Array of Daily Savings")
+# Display adjusted daily savings in a styled, scrollable table for easy tracking
 st.subheader("📅 Daily Savings Tracker")
+
 df_display = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
     "Daily Savings (Zloty)": adjusted_savings.round(2)
 })
 
-# Style: alternate row colors and center-align
+# Style: alternate row colors and format currency
 def style_rows(row):
-    color = '#f0f0f0' if row.name % 2 == 0 else 'white'
-    return ['background-color: {}'.format(color) for _ in row]
+    return ['background-color: #000000' for _ in row]
 
 styled_df = (
     df_display.style
@@ -147,5 +129,6 @@ styled_df = (
 )
 
 st.write(styled_df)
+
 
 st.markdown(f"**Total Saved:** {round(np.sum(adjusted_savings), 2)} Zloty (Target: {total_money})")
