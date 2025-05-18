@@ -87,9 +87,6 @@ daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
 # Clip interpolated savings within allowed daily max
 raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 
-# Clip interpolated savings within allowed daily max
-raw_savings = np.clip(daily_savings, 0, max_daily_saving)
-
 # Calculate adjustment per day to match total target sum
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 
@@ -99,11 +96,14 @@ adjusted_savings = raw_savings + adjustment
 # Clip again to ensure limits after adjustment
 adjusted_savings = np.clip(adjusted_savings, 0, max_daily_saving)
 
+# ➤ Store in a final array
+final_savings_array = adjusted_savings.copy()
+
 # Display adjusted daily savings
 st.subheader("Adjusted Daily Savings Plan")
 df = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
-    "Daily Savings": adjusted_savings
+    "Daily Savings": final_savings_array
 })
 st.line_chart(df.set_index("Day"))
 
@@ -111,7 +111,7 @@ st.subheader("Daily Savings Tracker")
 
 df_display = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
-    "Daily Savings (Zloty)": adjusted_savings.round(2)
+    "Daily Savings (Zloty)": final_savings_array.round(2)
 })
 
 # Style: alternate row colors and format currency
@@ -131,4 +131,4 @@ styled_df = (
 
 st.write(styled_df)
 
-st.markdown(f"**Total Saved:** {adjusted_savings.sum():.2f} Zloty (Target: {total_money})")
+st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")
