@@ -164,8 +164,6 @@ styled_df = (
 
 st.write(styled_df)
 
-st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")\
-
 import math
 import plotly.express as px
 
