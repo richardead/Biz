@@ -3,6 +3,8 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import os
+import math
+
 # moge edytowac
 st.title("Budget Planner – Daily Savings")
 
@@ -165,3 +167,76 @@ styled_df = (
 st.write(styled_df)
 
 st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")
+
+st.subheader("Fibonacci Spiral Style Visualization")
+
+if "fib_clicks" not in st.session_state:
+    st.session_state.fib_clicks = 0
+
+if st.button("Zoom Fibonacci Spiral"):
+    st.session_state.fib_clicks = (st.session_state.fib_clicks + 1) % 4  # Loop every 4 clicks
+
+# Function to generate Fibonacci squares
+def draw_fib_squares(savings_array, zoom_level):
+    fig = go.Figure()
+    x, y = 0, 0
+    direction = 0  # 0: right, 1: up, 2: left, 3: down
+    scale = 1 / (2 ** zoom_level)  # Zoom effect
+    golden_ratio = (1 + math.sqrt(5)) / 2
+
+    angle_map = {
+        0: (1, 0),
+        1: (0, 1),
+        2: (-1, 0),
+        3: (0, -1),
+    }
+
+    fib_sizes = [1, 1]
+    while len(fib_sizes) < len(savings_array):
+        fib_sizes.append(fib_sizes[-1] + fib_sizes[-2])
+
+    for i, saving in enumerate(savings_array):
+        size = fib_sizes[i] * scale
+        dx, dy = angle_map[direction]
+
+        # Draw square
+        square = go.Scatter(
+            x=[x, x + dx * size, x + dx * size - dy * size, x - dy * size, x],
+            y=[y, y + dy * size, y + dy * size + dx * size, y + dx * size, y],
+            fill='toself',
+            mode='lines',
+            line=dict(color='black'),
+            name=f"Day {i+1}"
+        )
+        fig.add_trace(square)
+
+        # Add label
+        label_x = x + (dx - dy) * size / 2
+        label_y = y + (dy + dx) * size / 2
+        fig.add_annotation(
+            x=label_x,
+            y=label_y,
+            text=f"Day {i+1}<br>{saving:.2f} zł",
+            showarrow=False,
+            font=dict(size=10),
+            align="center"
+        )
+
+        # Move origin for next square
+        x += (dx - dy) * size
+        y += (dy + dx) * size
+        direction = (direction + 1) % 4
+
+    fig.update_layout(
+        showlegend=False,
+        height=600,
+        width=600,
+        xaxis=dict(visible=False),
+        yaxis=dict(visible=False),
+        title="Fibonacci Spiral Styled Savings View (Zoom Level {})".format(zoom_level + 1),
+    )
+    return fig
+
+# Show the spiral figure
+spiral_fig = draw_fib_squares(final_savings_array, st.session_state.fib_clicks)
+st.plotly_chart(spiral_fig)
