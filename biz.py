@@ -3,9 +3,8 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import os
-import math
+import math  # for Fibonacci spiral logic
 
-# moge edytowac
 st.title("Budget Planner – Daily Savings")
 
 SAVE_FILE = "saved_points.csv"
@@ -36,7 +35,6 @@ total_money = st.number_input("Total Money to Save", min_value=1.0, value=1000.0
 max_daily_saving = total_money / num_days  # max saving per day
 
 # Adjust points if num_days changed
-# Remove points beyond num_days, add end point if missing
 def adjust_points(points, max_day):
     points = [pt for pt in points if pt[0] <= max_day]
     days = [pt[0] for pt in points]
@@ -66,7 +64,6 @@ fig.add_trace(go.Scatter(
     name="Daily Savings Points"
 ))
 
-# Show only ticks on selected days
 tick_days = sorted(set(x_vals_sorted))
 tick_labels = [f"Day {d}" for d in tick_days]
 
@@ -122,19 +119,12 @@ for i in range(len(sorted_points) - 1):
     for d in range(x0, x1):
         daily_savings[d - 1] = y0 + slope * (d - x0)
 
-# Set final point
 daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
-
-# Clip interpolated savings within allowed daily max
 raw_savings = np.clip(daily_savings, 0, max_daily_saving)
 
-# Calculate adjustment per day to match total target sum
 adjustment = (total_money - np.sum(raw_savings)) / num_days
-
-# Add adjustment evenly across all days
 final_savings_array = raw_savings + adjustment
 
-# Display adjusted daily savings
 st.subheader("Adjusted Daily Savings Plan")
 df = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
@@ -149,7 +139,6 @@ df_display = pd.DataFrame({
     "Daily Savings (Zloty)": final_savings_array.round(2)
 })
 
-# Style: alternate row colors and format currency
 def style_rows(row):
     return ['background-color: #000000' for _ in row]
 
@@ -168,6 +157,8 @@ st.write(styled_df)
 
 st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")
 
+# --- Fibonacci Spiral Style Visualization ---
+
 st.subheader("Fibonacci Spiral Style Visualization")
 
 if "fib_clicks" not in st.session_state:
@@ -176,12 +167,11 @@ if "fib_clicks" not in st.session_state:
 if st.button("Zoom Fibonacci Spiral"):
     st.session_state.fib_clicks = (st.session_state.fib_clicks + 1) % 4  # Loop every 4 clicks
 
-# Function to generate Fibonacci squares
 def draw_fib_squares(savings_array, zoom_level):
     fig = go.Figure()
     x, y = 0, 0
     direction = 0  # 0: right, 1: up, 2: left, 3: down
-    scale = 1 / (2 ** zoom_level)  # Zoom effect
+    scale = 1 / (2 ** zoom_level)
     golden_ratio = (1 + math.sqrt(5)) / 2
 
     angle_map = {
@@ -199,7 +189,6 @@ def draw_fib_squares(savings_array, zoom_level):
         size = fib_sizes[i] * scale
         dx, dy = angle_map[direction]
 
-        # Draw square
         square = go.Scatter(
             x=[x, x + dx * size, x + dx * size - dy * size, x - dy * size, x],
             y=[y, y + dy * size, y + dy * size + dx * size, y + dx * size, y],
@@ -210,7 +199,6 @@ def draw_fib_squares(savings_array, zoom_level):
         )
         fig.add_trace(square)
 
-        # Add label
         label_x = x + (dx - dy) * size / 2
         label_y = y + (dy + dx) * size / 2
         fig.add_annotation(
@@ -222,7 +210,6 @@ def draw_fib_squares(savings_array, zoom_level):
             align="center"
         )
 
-        # Move origin for next square
         x += (dx - dy) * size
         y += (dy + dx) * size
         direction = (direction + 1) % 4
@@ -237,6 +224,5 @@ def draw_fib_squares(savings_array, zoom_level):
     )
     return fig
 
-# Show the spiral figure
 spiral_fig = draw_fib_squares(final_savings_array, st.session_state.fib_clicks)
 st.plotly_chart(spiral_fig)
