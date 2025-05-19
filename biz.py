@@ -70,7 +70,7 @@ tick_labels = [f"Day {d}" for d in tick_days]
 
 fig.update_layout(
     xaxis_title="Day",
-    yaxis_title="Money Saved per Day (Zloty)",
+    yaxis_title="Money Saved per Day",
     xaxis=dict(
         range=[1, num_days],
         tickmode='array',
@@ -144,7 +144,7 @@ st.subheader("Daily Savings Tracker")
 
 df_display = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
-    "Daily Savings (Zloty)": final_savings_array.round(2)
+    "Daily Savings": final_savings_array.round(2)
 })
 
 # Style: alternate row colors and format currency
@@ -154,7 +154,7 @@ def style_rows(row):
 styled_df = (
     df_display.style
     .apply(style_rows, axis=1)
-    .format({"Daily Savings (Zloty)": "{:.2f}"})
+    .format({"Daily Savings": "{:.2f}"})
     .set_table_styles([
         {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},
         {"selector": "td", "props": [("text-align", "center")]},
