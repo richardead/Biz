@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import os
-
+# moge edytowac
 st.title("Budget Planner – Daily Savings")
 
 SAVE_FILE = "saved_points.csv"
