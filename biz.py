@@ -172,10 +172,20 @@ for i in range(len(sorted_points) - 1):
     for d in range(x0, x1):
         daily_savings[d - 1] = y0 + slope * (d - x0)
 
-daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
+# Final point (ensure array doesn't exceed bounds)
+if sorted_points[-1][0] <= num_days:
+    daily_savings[sorted_points[-1][0] - 1] = sorted_points[-1][1]
+
+# Clip and pad if needed
 raw_savings = np.clip(daily_savings, 0, max_daily_saving)
+if len(raw_savings) < num_days:
+    raw_savings = np.append(raw_savings, [0] * (num_days - len(raw_savings)))
+elif len(raw_savings) > num_days:
+    raw_savings = raw_savings[:num_days]
+
 adjustment = (total_money - np.sum(raw_savings)) / num_days
 final_savings_array = raw_savings + adjustment
+
 
 # --- Show adjusted savings ---
 st.subheader("Adjusted Daily Savings Plan")
