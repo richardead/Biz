@@ -167,77 +167,95 @@ st.write(styled_df)
 import math
 import plotly.express as px
 
-st.subheader("Fibonacci Spiral Zoom")
+st.subheader("Fibonacci Spiral Zoom View")
 
-if "fib_zoom" not in st.session_state:
-    st.session_state.fib_zoom = 0
+# Initialize session state for zoom
+if "fib_click_count" not in st.session_state:
+    st.session_state.fib_click_count = 0
 
+# Zoom button
 if st.button("Zoom Fibonacci Spiral"):
-    st.session_state.fib_zoom += 1
+    st.session_state.fib_click_count += 1
 
-# Fibonacci square spiral logic
-def generate_fib_squares(n):
-    fib = [1, 1]
-    for _ in range(n - 2):
-        fib.append(fib[-1] + fib[-2])
-    return fib
+# Fibonacci side lengths
+fib_lengths = [1, 1]
+for _ in range(20):
+    fib_lengths.append(fib_lengths[-1] + fib_lengths[-2])
 
-def get_spiral_squares(fib, zoom_level, savings):
-    squares = []
-    angle = 0
+# Get savings data
+savings_list = final_savings_array.tolist()
+
+# Spiral logic
+def generate_spiral_squares(start_index, num_squares=4):
     x, y = 0, 0
+    direction = 0  # 0: right, 90: up, 180: left, 270: down
+    squares = []
+    for i in range(num_squares):
+        idx = (start_index + i) % len(fib_lengths)
+        size = fib_lengths[idx]
+        day = (start_index + i) % len(savings_list)
+        label = f"Day {day + 1}<br>{savings_list[day]:.2f} zł"
 
-    for i in range(zoom_level, zoom_level + 4):
-        size = fib[i % len(fib)]
-        dx = size * math.cos(math.radians(angle))
-        dy = size * math.sin(math.radians(angle))
         squares.append({
-            "x": x,
-            "y": y,
-            "size": size,
-            "day": (i % len(savings)) + 1,
-            "savings": round(savings[i % len(savings)], 2)
+            "x0": x,
+            "y0": y,
+            "x1": x + size,
+            "y1": y + size,
+            "label": label
         })
-        x += dx
-        y += dy
-        angle += 90
+
+        # Move to next corner based on direction
+        if direction == 0:  # right
+            x += size
+        elif direction == 90:  # up
+            y += size
+        elif direction == 180:  # left
+            x -= fib_lengths[idx - 1] if idx > 0 else 0
+            x -= size
+        elif direction == 270:  # down
+            y -= fib_lengths[idx - 1] if idx > 0 else 0
+            y -= size
+
+        direction = (direction + 90) % 360
+
     return squares
 
-if len(final_savings_array) >= 4:
-    fib = generate_fib_squares(20)
-    zoom_index = st.session_state.fib_zoom % 16
-    squares = get_spiral_squares(fib, zoom_index, final_savings_array)
+# Draw the spiral squares
+start_idx = (st.session_state.fib_click_count * 4) % len(fib_lengths)
+spiral_data = generate_spiral_squares(start_idx)
 
-    spiral_fig = go.Figure()
+spiral_fig = go.Figure()
 
-    for s in squares:
-        spiral_fig.add_shape(
-            type="rect",
-            x0=s["x"], y0=s["y"],
-            x1=s["x"] + s["size"], y1=s["y"] + s["size"],
-            line=dict(color="blue")
-        )
-        spiral_fig.add_annotation(
-            x=s["x"] + s["size"] / 2,
-            y=s["y"] + s["size"] / 2,
-            text=f"Day {s['day']}<br>{s['savings']} zł",
-            showarrow=False,
-            font=dict(size=10, color="black"),
-            xanchor="center", yanchor="middle"
-        )
-
-    spiral_fig.update_layout(
-        title="Fibonacci Spiral Zoom View",
-        showlegend=False,
-        width=600,
-        height=600,
-        xaxis=dict(visible=False),
-        yaxis=dict(visible=False),
+for sq in spiral_data:
+    spiral_fig.add_shape(
+        type="rect",
+        x0=sq["x0"],
+        y0=sq["y0"],
+        x1=sq["x1"],
+        y1=sq["y1"],
+        line=dict(color="black", width=2),
+        fillcolor="rgba(200,200,255,0.2)"
+    )
+    spiral_fig.add_annotation(
+        x=(sq["x0"] + sq["x1"]) / 2,
+        y=(sq["y0"] + sq["y1"]) / 2,
+        text=sq["label"],
+        showarrow=False,
+        font=dict(size=10),
+        xanchor="center",
+        yanchor="middle"
     )
 
-    st.plotly_chart(spiral_fig)
-else:
-    st.info("Not enough data for Fibonacci spiral. Add more days.")
+spiral_fig.update_layout(
+    width=600,
+    height=600,
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False),
+    margin=dict(l=0, r=0, t=30, b=0),
+    title="Fibonacci Spiral (Zoomed View)"
+)
+
+st.plotly_chart(spiral_fig)
 
 
 #streamlit
