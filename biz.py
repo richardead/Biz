@@ -163,7 +163,57 @@ def style_rows(row):
     return [f'background-color: {bg_color}; color: {text_color}' for _ in row]
 
 
-styled_df = (
+styled_df =import plotly.graph_objects as go
+
+def sierpinski_triangle(level=1):
+    return [[(0, 0), (1, 0), (0.5, 0.866)]]
+
+if "click_count" not in st.session_state:
+    st.session_state.click_count = 0
+
+st.subheader("Sierpiński Triangle – Level 1 z Licznikiem Kliknięć")
+
+triangle_level1 = sierpinski_triangle(level=1)[0]
+x = [p[0] for p in triangle_level1] + [triangle_level1[0][0]]
+y = [p[1] for p in triangle_level1] + [triangle_level1[0][1]]
+
+fig_tri = go.Figure()
+
+fig_tri.add_trace(go.Scatter(
+    x=x,
+    y=y,
+    fill='toself',
+    line=dict(color='blue'),
+    mode='lines',
+    name='Clickable Triangle',
+    hoverinfo='skip'
+))
+
+mid_x = sum(p[0] for p in triangle_level1) / 3
+mid_y = sum(p[1] for p in triangle_level1) / 3
+
+fig_tri.add_trace(go.Scatter(
+    x=[mid_x],
+    y=[mid_y],
+    mode='text',
+    text=[f"{st.session_state.click_count}"],
+    textfont=dict(size=24, color="black"),
+    showlegend=False
+))
+
+fig_tri.update_layout(
+    xaxis=dict(visible=False, range=[-0.1, 1.1]),
+    yaxis=dict(visible=False, scaleanchor='x', scaleratio=1, range=[-0.1, 1]),
+    margin=dict(t=20, b=20, l=20, r=20),
+    height=400
+)
+
+st.plotly_chart(fig_tri, use_container_width=True)
+
+if st.button("Kliknij trójkąt"):
+    st.session_state.click_count += 1
+    st.experimental_rerun()
+ (
     df_display.style
     .apply(style_rows, axis=1)
     .format({"Daily Savings": "${:.2f}"})  # Format currency
@@ -177,51 +227,7 @@ styled_df = (
 
 st.write(styled_df)
 
-# --- Sierpiński Triangle Level 1 with Click Counter ---
-st.subheader("Sierpiński Triangle – Level 1 z Licznikiem Kliknięć")
-# Trójkąt do kliknięcia + licznik kliknięć
-if "click_count" not in st.session_state:
-    st.session_state.click_count = 0
-
-if st.button("Kliknij trójkąt"):
-    st.session_state.click_count += 1
-
-# Bierzemy pierwszy trójkąt z poziomu 1
-triangle_level1 = sierpinski_triangle(level=1)[0]
-x = [p[0] for p in triangle_level1] + [triangle_level1[0][0]]
-y = [p[1] for p in triangle_level1] + [triangle_level1[0][1]]
-
-fig_tri = go.Figure()
-
-fig_tri.add_trace(go.Scatter(
-    x=x,
-    y=y,
-    fill='toself',
-    line=dict(color='blue'),
-    mode='lines',
-    name='Clickable Triangle'
-))
-
-# Liczenie środka (środek ciężkości trójkąta)
-mid_x = sum(p[0] for p in triangle_level1) / 3
-mid_y = sum(p[1] for p in triangle_level1) / 3
-
-# Adnotacja z liczbą kliknięć
-fig_tri.add_trace(go.Scatter(
-    x=[mid_x],
-    y=[mid_y],
-    mode='text',
-    text=[f"{st.session_state.click_count}"],
-    textfont=dict(size=24, color="black"),
-    showlegend=False
-))
-
-fig_tri.update_layout(
-    xaxis=dict(visible=False),
-    yaxis=dict(visible=False, scaleanchor='x', scaleratio=1),
-    margin=dict(t=20, b=20, l=20, r=20),
-    height=400
-)
-
-st.plotly_chart(fig_tri, use_container_width=True)
+def sierpinski_triangle(level=1):
+    # zwraca listę współrzędnych trójkątów, na razie tylko jeden trójkąt
+    return [[(0, 0), (1, 0), (0.5, 0.866)]]
 
