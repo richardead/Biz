@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import os
 
-st.title("Budget Planner – Daily Savings")
+st.title("Budget Planner")
 
 SAVE_FILE = "saved_points.csv"
 
