@@ -162,12 +162,13 @@ styled_df = (
     .apply(style_rows, axis=1)
     .format({"Daily Savings": "${:.2f}"})  # Format currency
     .set_table_styles([
-        {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},
-        {"selector": "td", "props": [("text-align", "center"), ("padding", "8px")]},  # Center-align and add padding
+        {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},  # Header style
+        {"selector": "td", "props": [("background-color", "white"), ("text-align", "center"), ("padding", "8px")]},  # Cell style
         {"selector": "table", "props": [("border-collapse", "collapse"), ("width", "100%")]},  # Table layout improvements
     ])
     .set_properties(**{"max-height": "400px", "overflow-y": "auto", "display": "block"})
 )
 
 st.write(styled_df)
+
 
