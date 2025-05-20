@@ -164,100 +164,96 @@ styled_df = (
 
 st.write(styled_df)
 
+# ================================
+# Sierpiński-style Triangle Visual
+# ================================
 import math
+import plotly.graph_objects as go
 
-def draw_equilateral_triangle(center, size, rotation=0):
-    """Return the vertices of an equilateral triangle centered at 'center' with 'size'."""
-    cx, cy = center
+st.subheader("Sierpiński-style Triangle")
+
+def draw_equilateral_triangle(cx, cy, size, rotation=0):
+    """Return vertices of an equilateral triangle centered at (cx, cy)."""
     points = []
     for i in range(3):
-        angle_deg = 120 * i + rotation
+        angle_deg = rotation + i * 120
         angle_rad = math.radians(angle_deg)
         x = cx + size * math.cos(angle_rad)
         y = cy + size * math.sin(angle_rad)
         points.append((x, y))
-    # Close the triangle
-    points.append(points[0])
+    points.append(points[0])  # Close the triangle
     return points
 
-# Define size and positions
+# Main and corner sizes
 main_size = 1.0
 corner_size = main_size / 2
 
-# Outer triangle centered at (0, 0)
-outer_triangle = draw_equilateral_triangle((0, 0), main_size)
+# Outer triangle
+outer_center = (0, 0)
+outer_triangle = draw_equilateral_triangle(*outer_center, main_size)
 
-# Calculate corners for inner triangles
+# Positions for corner triangles
 corner_centers = []
-for i in range(3):
-    angle_deg = 120 * i - 30  # angles to get corners of outer triangle
+for angle_deg in [90, 210, 330]:  # symmetric points around center
     angle_rad = math.radians(angle_deg)
-    x = 0.5 * main_size * math.cos(angle_rad)
-    y = 0.5 * main_size * math.sin(angle_rad)
+    x = outer_center[0] + (main_size / 2) * math.cos(angle_rad)
+    y = outer_center[1] + (main_size / 2) * math.sin(angle_rad)
     corner_centers.append((x, y))
 
-# Generate corner triangles (upright)
-corner_triangles = [draw_equilateral_triangle(c, corner_size) for c in corner_centers]
+# Corner triangles (upright)
+corner_triangles = [
+    draw_equilateral_triangle(cx, cy, corner_size)
+    for (cx, cy) in corner_centers
+]
 
-# Central triangle (inverted)
-center_triangle = draw_equilateral_triangle((0, 0), corner_size, rotation=180)
+# Center inverted triangle
+center_triangle = draw_equilateral_triangle(*outer_center, corner_size, rotation=180)
 
-# Create plotly figure
-fig2 = go.Figure()
+# Create figure
+fig = go.Figure()
 
-# Outer triangle outline (optional)
-fig2.add_trace(go.Scatter(
+# Outer triangle outline
+fig.add_trace(go.Scatter(
     x=[x for x, y in outer_triangle],
     y=[y for x, y in outer_triangle],
     mode='lines',
     line=dict(color='black', width=2),
-    name="Outer Triangle"
+    showlegend=False
 ))
 
 # Corner triangles
-for i, triangle in enumerate(corner_triangles):
-    fig2.add_trace(go.Scatter(
-        x=[x for x, y in triangle],
-        y=[y for x, y in triangle],
+for tri in corner_triangles:
+    fig.add_trace(go.Scatter(
+        x=[x for x, y in tri],
+        y=[y for x, y in tri],
         mode='lines',
         fill='toself',
-        name=f"Corner {i+1}",
         line=dict(color='blue'),
         fillcolor='blue',
         opacity=0.6,
         showlegend=False
     ))
 
-# Center inverted triangle
-fig2.add_trace(go.Scatter(
+# Center triangle
+fig.add_trace(go.Scatter(
     x=[x for x, y in center_triangle],
     y=[y for x, y in center_triangle],
     mode='lines',
     fill='toself',
-    name="Center",
     line=dict(color='orange'),
     fillcolor='orange',
     opacity=0.8,
     showlegend=False
 ))
 
-# Update layout
-fig2.update_layout(
-    title="Sierpiński-style Triangle",
-    showlegend=False,
-    height=500,
+# Layout adjustments
+fig.update_layout(
     width=500,
-    xaxis=dict(showgrid=False, zeroline=False, visible=False),
-    yaxis=dict(showgrid=False, zeroline=False, visible=False),
-    margin=dict(l=10, r=10, t=30, b=10)
+    height=500,
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False),
+    margin=dict(l=0, r=0, t=30, b=0),
+    title="Sierpiński Triangle (Base Iteration)"
 )
 
-# Display in Streamlit
-st.subheader("Sierpiński-Style Triangle")
-st.plotly_chart(fig2, use_container_width=False)
-
-
-#streamlit
-#numpy
-#pandas
-#plotly
+st.plotly_chart(fig, use_container_width=False)
