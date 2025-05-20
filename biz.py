@@ -264,14 +264,11 @@ fig_tri.add_annotation(
     y=mid_y,
     text=f"Kliknięć: {st.session_state.click_count}",
     showarrow=False,
-    font=dict(size=16, color="black", family="Arial"),
+    font=dict(size=16, color="black"),
     xanchor="center",
-    yanchor="middle",
-    bgcolor="white",
-    bordercolor="black",
-    borderwidth=1,
-    layer="above"
+    yanchor="middle"
 )
+
 
 # Ustawienia wykresu
 fig_tri.update_layout(
