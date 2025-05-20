@@ -140,6 +140,11 @@ df = pd.DataFrame({
 })
 st.line_chart(df.set_index("Day"))
 
+import pandas as pd
+import numpy as np
+import streamlit as st
+
+# Assuming num_days and final_savings_array are already defined
 st.subheader("Daily Savings Tracker")
 
 df_display = pd.DataFrame({
@@ -149,17 +154,20 @@ df_display = pd.DataFrame({
 
 # Style: alternate row colors and format currency
 def style_rows(row):
+    # Set white background for all rows
     return ['background-color: white' for _ in row]
 
 styled_df = (
     df_display.style
     .apply(style_rows, axis=1)
-    .format({"Daily Savings": "{:.2f}"})
+    .format({"Daily Savings": "${:.2f}"})  # Format currency
     .set_table_styles([
         {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},
-        {"selector": "td", "props": [("text-align", "center")]},
+        {"selector": "td", "props": [("text-align", "center"), ("padding", "8px")]},  # Center-align and add padding
+        {"selector": "table", "props": [("border-collapse", "collapse"), ("width", "100%")]},  # Table layout improvements
     ])
     .set_properties(**{"max-height": "400px", "overflow-y": "auto", "display": "block"})
 )
 
 st.write(styled_df)
+
