@@ -169,113 +169,47 @@ st.write(styled_df)
 
 # --- Sierpiński Triangle Level 1 with Click Counter ---
 st.subheader("Sierpiński Triangle – Level 1 z Licznikiem Kliknięć")
-
-# Inicjalizacja kliknięć
+# Trójkąt do kliknięcia + licznik kliknięć
 if "click_count" not in st.session_state:
     st.session_state.click_count = 0
 
-if st.button("Kliknij mnie"):
+if st.button("Kliknij trójkąt"):
     st.session_state.click_count += 1
 
-def sierpinski_level1():
-    A = np.array([0.0, 0.0])
-    B = np.array([1.0, 0.0])
-    C = np.array([0.5, np.sqrt(3)/2])
-    AB = (A + B) / 2
-    BC = (B + C) / 2
-    CA = (C + A) / 2
-
-    return [
-        [A, AB, CA],    # dolny lewy
-        [AB, B, BC],    # dolny prawy
-        [CA, BC, C],    # górny
-    ]
+# Bierzemy pierwszy trójkąt z poziomu 1
+triangle_level1 = sierpinski_triangle(level=1)[0]
+x = [p[0] for p in triangle_level1] + [triangle_level1[0][0]]
+y = [p[1] for p in triangle_level1] + [triangle_level1[0][1]]
 
 fig_tri = go.Figure()
-triangles_lvl1 = sierpinski_level1()
 
-for i, tri in enumerate(triangles_lvl1):
-    x = [p[0] for p in tri] + [tri[0][0]]
-    y = [p[1] for p in tri] + [tri[0][1]]
-    fig_tri.add_trace(go.Scatter(
-        x=x, y=y,
-        mode='lines',
-        line=dict(color="black"),
-        fill='toself',
-        showlegend=False
-    ))
+fig_tri.add_trace(go.Scatter(
+    x=x,
+    y=y,
+    fill='toself',
+    line=dict(color='blue'),
+    mode='lines',
+    name='Clickable Triangle'
+))
 
-# Środek dolnego lewego trójkąta – tam wyświetlamy licznik
-mid_x = sum(p[0] for p in triangles_lvl1[0]) / 3
-mid_y = sum(p[1] for p in triangles_lvl1[0]) / 3
+# Liczenie środka (środek ciężkości trójkąta)
+mid_x = sum(p[0] for p in triangle_level1) / 3
+mid_y = sum(p[1] for p in triangle_level1) / 3
 
+# Adnotacja z liczbą kliknięć
 fig_tri.add_trace(go.Scatter(
     x=[mid_x],
     y=[mid_y],
-    mode="text",
-    text=[f"Kliknięć: {st.session_state.click_count}"],
-    textposition="middle center",
+    mode='text',
+    text=[f"{st.session_state.click_count}"],
+    textfont=dict(size=24, color="black"),
     showlegend=False
 ))
 
 fig_tri.update_layout(
-    showlegend=False,
-    xaxis=dict(showgrid=False, zeroline=False, visible=False),
-    yaxis=dict(showgrid=False, zeroline=False, visible=False, scaleanchor='x', scaleratio=1),
-    margin=dict(t=10, b=10, l=10, r=10),
-    height=400
-)
-
-st.plotly_chart(fig_tri, use_container_width=True)
-
-st.subheader("Kliknij trójkąt!")
-
-# Inicjalizacja licznika kliknięć
-if "click_count" not in st.session_state:
-    st.session_state.click_count = 0
-
-# Przycisk
-if st.button("Kliknij środek trójkąta"):
-    st.session_state.click_count += 1
-
-# Nowa figura z poziomem 1
-fig_tri = go.Figure()
-
-# Poziom 1 – tylko 3 trójkąty
-triangles_lvl1 = sierpinski_triangle(level=1)
-
-for tri in triangles_lvl1:
-    x = [p[0] for p in tri] + [tri[0][0]]
-    y = [p[1] for p in tri] + [tri[0][1]]
-    fig_tri.add_trace(go.Scatter(
-        x=x, y=y,
-        mode='lines',
-        fill='toself',
-        line=dict(color='black')
-    ))
-
-# Środek trójkąta środkowego (drugi z listy)
-mid_x = np.mean([p[0] for p in triangles_lvl1[1]])
-mid_y = np.mean([p[1] for p in triangles_lvl1[1]])
-
-# Dodaj licznik jako tekst
-fig_tri.add_annotation(
-    x=mid_x,
-    y=mid_y,
-    text=f"Kliknięć: {st.session_state.click_count}",
-    showarrow=False,
-    font=dict(size=16, color="black"),
-    xanchor="center",
-    yanchor="middle"
-)
-
-
-# Ustawienia wykresu
-fig_tri.update_layout(
-    showlegend=False,
-    xaxis=dict(showgrid=False, zeroline=False, visible=False),
-    yaxis=dict(showgrid=False, zeroline=False, visible=False, scaleanchor='x', scaleratio=1),
-    margin=dict(t=10, b=10, l=10, r=10),
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False, scaleanchor='x', scaleratio=1),
+    margin=dict(t=20, b=20, l=20, r=20),
     height=400
 )
 
