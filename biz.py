@@ -8,6 +8,8 @@ st.title("Budget Planner – Daily Savings")
 
 SAVE_FILE = "saved_points.csv"
 
+st.set_page_config(page_title="Budget Planner – Daily Savings", page_icon="$", layout="wide", initial_sidebar_state="auto", theme="dark")
+
 # Functions to save/load points persistently
 def save_points(points):
     df = pd.DataFrame(points, columns=["Day", "Savings"])
