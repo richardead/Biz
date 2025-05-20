@@ -226,7 +226,39 @@ fig_tri.update_layout(
     height=400
 )
 
-# Dodaj tekst po trójkątach (kliknięć)
+st.plotly_chart(fig_tri, use_container_width=True)
+
+st.subheader("Kliknij trójkąt!")
+
+# Inicjalizacja licznika kliknięć
+if "click_count" not in st.session_state:
+    st.session_state.click_count = 0
+
+# Przycisk
+if st.button("Kliknij środek trójkąta"):
+    st.session_state.click_count += 1
+
+# Nowa figura z poziomem 1
+fig_tri = go.Figure()
+
+# Poziom 1 – tylko 3 trójkąty
+triangles_lvl1 = sierpinski_triangle(level=1)
+
+for tri in triangles_lvl1:
+    x = [p[0] for p in tri] + [tri[0][0]]
+    y = [p[1] for p in tri] + [tri[0][1]]
+    fig_tri.add_trace(go.Scatter(
+        x=x, y=y,
+        mode='lines',
+        fill='toself',
+        line=dict(color='black')
+    ))
+
+# Środek trójkąta środkowego (drugi z listy)
+mid_x = np.mean([p[0] for p in triangles_lvl1[1]])
+mid_y = np.mean([p[1] for p in triangles_lvl1[1]])
+
+# Dodaj licznik jako tekst
 fig_tri.add_annotation(
     x=mid_x,
     y=mid_y,
@@ -238,8 +270,17 @@ fig_tri.add_annotation(
     bgcolor="white",
     bordercolor="black",
     borderwidth=1,
-    layer="above"  # <-- kluczowe: umieść nad grafiką
+    layer="above"
 )
 
+# Ustawienia wykresu
+fig_tri.update_layout(
+    showlegend=False,
+    xaxis=dict(showgrid=False, zeroline=False, visible=False),
+    yaxis=dict(showgrid=False, zeroline=False, visible=False, scaleanchor='x', scaleratio=1),
+    margin=dict(t=10, b=10, l=10, r=10),
+    height=400
+)
 
 st.plotly_chart(fig_tri, use_container_width=True)
+
