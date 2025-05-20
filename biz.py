@@ -4,7 +4,7 @@ import pandas as pd
 import plotly.graph_objects as go
 import os
 
-st.title("Budget Planner")
+st.title("Budget Planner – Daily Savings")
 
 SAVE_FILE = "saved_points.csv"
 
@@ -70,7 +70,7 @@ tick_labels = [f"Day {d}" for d in tick_days]
 
 fig.update_layout(
     xaxis_title="Day",
-    yaxis_title="Money Saved per Day",
+    yaxis_title="Money Saved per Day (Zloty)",
     xaxis=dict(
         range=[1, num_days],
         tickmode='array',
@@ -140,10 +140,34 @@ df = pd.DataFrame({
 })
 st.line_chart(df.set_index("Day"))
 
-# Assuming num_days and final_savings_array are already defined
 st.subheader("Daily Savings Tracker")
 
 df_display = pd.DataFrame({
     "Day": np.arange(1, num_days + 1),
-    "Daily Savings": final_savings_array.round(2)
+    "Daily Savings (Zloty)": final_savings_array.round(2)
 })
+
+# Style: alternate row colors and format currency
+def style_rows(row):
+    return ['background-color: #000000' for _ in row]
+
+styled_df = (
+    df_display.style
+    .apply(style_rows, axis=1)
+    .format({"Daily Savings (Zloty)": "{:.2f}"})
+    .set_table_styles([
+        {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},
+        {"selector": "td", "props": [("text-align", "center")]},
+    ])
+    .set_properties(**{"max-height": "400px", "overflow-y": "auto", "display": "block"})
+)
+
+st.write(styled_df)
+
+st.markdown(f"**Total Saved:** {final_savings_array.sum():.2f} Zloty (Target: {total_money})")\
+
+
+#streamlit
+#numpy
+#pandas
+#plotly
