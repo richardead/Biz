@@ -227,18 +227,18 @@ triangle_day_end = num_days
 max_saving = max(y_vals_sorted) * 1.2 + 1
 
 for level in fib_levels:
-y = max_daily_saving * level
-fig.add_shape(
-type="path",
-path=f"M {triangle_day_start},{0} L {(triangle_day_start + triangle_day_end) / 2},{y} L {triangle_day_end},{0} Z",
-fillcolor="rgba(255,215,0,0.2)" if level == 0.618 else "rgba(30,144,255,0.2)",
-line=dict(color="rgba(0,0,0,0)"),
-layer="below"
-)
-fig.add_annotation(
-x=(triangle_day_start + triangle_day_end) / 2,
-y=y,
-text=f"{int(level * 100)}% Fib",
-showarrow=False,
-font=dict(color="gray", size=10)
-)
+    y = max_daily_saving * level
+    fig.add_shape(
+    type="path",
+    path=f"M {triangle_day_start},{0} L {(triangle_day_start + triangle_day_end) / 2},{y} L {triangle_day_end},{0} Z",
+    fillcolor="rgba(255,215,0,0.2)" if level == 0.618 else "rgba(30,144,255,0.2)",
+    line=dict(color="rgba(0,0,0,0)"),
+    layer="below"
+    )
+    fig.add_annotation(
+    x=(triangle_day_start + triangle_day_end) / 2,
+    y=y,
+    text=f"{int(level * 100)}% Fib",
+    showarrow=False,
+    font=dict(color="gray", size=10)
+    )
