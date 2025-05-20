@@ -167,50 +167,58 @@ styled_df = (
 
 st.write(styled_df)
 
+# --- Sierpiński Triangle Level 1 with Click Counter ---
+st.subheader("Sierpiński Triangle – Level 1 z Licznikiem Kliknięć")
 
-st.subheader("Sierpiński Triangle (2 levels)")
+# Inicjalizacja kliknięć
+if "click_count" not in st.session_state:
+    st.session_state.click_count = 0
 
-def sierpinski_triangle(level):
-    # Początkowy trójkąt równoboczny
-    def midpoint(p1, p2):
-        return [(p1[0] + p2[0])/2, (p1[1] + p2[1])/2]
+if st.button("Kliknij mnie"):
+    st.session_state.click_count += 1
 
-    def divide(triangle, lvl):
-        if lvl == 0:
-            return [triangle]
-        else:
-            A, B, C = triangle
-            AB = midpoint(A, B)
-            BC = midpoint(B, C)
-            CA = midpoint(C, A)
-            # Podziel na 3 nowe trójkąty
-            return (
-                divide([A, AB, CA], lvl-1) +
-                divide([AB, B, BC], lvl-1) +
-                divide([CA, BC, C], lvl-1)
-            )
+def sierpinski_level1():
+    A = np.array([0.0, 0.0])
+    B = np.array([1.0, 0.0])
+    C = np.array([0.5, np.sqrt(3)/2])
+    AB = (A + B) / 2
+    BC = (B + C) / 2
+    CA = (C + A) / 2
 
-    base_triangle = [[0, 0], [1, 0], [0.5, np.sqrt(3)/2]]
-    triangles = divide(base_triangle, level)
-    return triangles
+    return [
+        [A, AB, CA],    # dolny lewy
+        [AB, B, BC],    # dolny prawy
+        [CA, BC, C],    # górny
+    ]
 
-# Wygeneruj trójkąty
-triangles = sierpinski_triangle(level=2)
+fig_tri = go.Figure()
+triangles_lvl1 = sierpinski_level1()
 
-# Rysuj
-fig_sierpinski = go.Figure()
-
-for tri in triangles:
-    x = [p[0] for p in tri] + [tri[0][0]]  # zamknij pętlę
+for i, tri in enumerate(triangles_lvl1):
+    x = [p[0] for p in tri] + [tri[0][0]]
     y = [p[1] for p in tri] + [tri[0][1]]
-    fig_sierpinski.add_trace(go.Scatter(
+    fig_tri.add_trace(go.Scatter(
         x=x, y=y,
         mode='lines',
-        line=dict(color='black'),
-        fill='toself'
+        line=dict(color="black"),
+        fill='toself',
+        showlegend=False
     ))
 
-fig_sierpinski.update_layout(
+# Środek dolnego lewego trójkąta – tam wyświetlamy licznik
+mid_x = sum(p[0] for p in triangles_lvl1[0]) / 3
+mid_y = sum(p[1] for p in triangles_lvl1[0]) / 3
+
+fig_tri.add_trace(go.Scatter(
+    x=[mid_x],
+    y=[mid_y],
+    mode="text",
+    text=[f"Kliknięć: {st.session_state.click_count}"],
+    textposition="middle center",
+    showlegend=False
+))
+
+fig_tri.update_layout(
     showlegend=False,
     xaxis=dict(showgrid=False, zeroline=False, visible=False),
     yaxis=dict(showgrid=False, zeroline=False, visible=False, scaleanchor='x', scaleratio=1),
@@ -218,25 +226,4 @@ fig_sierpinski.update_layout(
     height=400
 )
 
-st.plotly_chart(fig_sierpinski, use_container_width=True)
-fib_levels = [0.382, 0.618]
-triangle_day_start = 1
-triangle_day_end = num_days
-max_saving = max(y_vals_sorted) * 1.2 + 1
-
-for level in fib_levels:
-    y = max_daily_saving * level
-    fig.add_shape(
-    type="path",
-    path=f"M {triangle_day_start},{0} L {(triangle_day_start + triangle_day_end) / 2},{y} L {triangle_day_end},{0} Z",
-    fillcolor="rgba(255,215,0,0.2)" if level == 0.618 else "rgba(30,144,255,0.2)",
-    line=dict(color="rgba(0,0,0,0)"),
-    layer="below"
-    )
-    fig.add_annotation(
-    x=(triangle_day_start + triangle_day_end) / 2,
-    y=y,
-    text=f"{int(level * 100)}% Fib",
-    showarrow=False,
-    font=dict(color="gray", size=10)
-    )
+st.plotly_chart(fig_tri, use_container_width=True)
