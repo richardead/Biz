@@ -149,18 +149,28 @@ df_display = pd.DataFrame({
 })
 
 # Style: alternate row colors and format currency
+from streamlit.runtime.scriptrunner import get_script_run_ctx
+from streamlit import _get_option
+
+# Detect dark mode
+is_dark_mode = _get_option("theme.base") == "dark"
+
+bg_color = "#1e1e1e" if is_dark_mode else "white"
+text_color = "white" if is_dark_mode else "black"
+header_bg = "#333333" if is_dark_mode else "#4CAF50"
+
 def style_rows(row):
-    # Set white background for all rows
-    return ['background-color: white' for _ in row]
+    return [f'background-color: {bg_color}; color: {text_color}' for _ in row]
+
 
 styled_df = (
     df_display.style
     .apply(style_rows, axis=1)
     .format({"Daily Savings": "${:.2f}"})  # Format currency
     .set_table_styles([
-        {"selector": "th", "props": [("background-color", "#4CAF50"), ("color", "white"), ("font-weight", "bold")]},  # Header style
-        {"selector": "td", "props": [("background-color", "white"), ("text-align", "center"), ("padding", "8px")]},  # Cell style
-        {"selector": "table", "props": [("border-collapse", "collapse"), ("width", "100%")]},  # Table layout improvements
+        {"selector": "th", "props": [("background-color", header_bg), ("color", "white" if is_dark_mode else "white"), ("font-weight", "bold")]},
+        {"selector": "td", "props": [("background-color", bg_color), ("color", text_color), ("text-align", "center"), ("padding", "8px")]},
+        {"selector": "table", "props": [("border-collapse", "collapse"), ("width", "100%")]},
     ])
     .set_properties(**{"max-height": "400px", "overflow-y": "auto", "display": "block"})
 )
