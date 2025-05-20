@@ -149,7 +149,7 @@ df_display = pd.DataFrame({
 
 # Style: alternate row colors and format currency
 def style_rows(row):
-    return ['background-color: #000000' for _ in row]
+    return ['background-color: white' for _ in row]
 
 styled_df = (
     df_display.style
@@ -163,97 +163,3 @@ styled_df = (
 )
 
 st.write(styled_df)
-
-# ================================
-# Sierpiński-style Triangle Visual
-# ================================
-import math
-import plotly.graph_objects as go
-
-st.subheader("Sierpiński-style Triangle")
-
-def draw_equilateral_triangle(cx, cy, size, rotation=0):
-    """Return vertices of an equilateral triangle centered at (cx, cy)."""
-    points = []
-    for i in range(3):
-        angle_deg = rotation + i * 120
-        angle_rad = math.radians(angle_deg)
-        x = cx + size * math.cos(angle_rad)
-        y = cy + size * math.sin(angle_rad)
-        points.append((x, y))
-    points.append(points[0])  # Close the triangle
-    return points
-
-# Main and corner sizes
-main_size = 1.0
-corner_size = main_size / 2
-
-# Outer triangle
-outer_center = (0, 0)
-outer_triangle = draw_equilateral_triangle(*outer_center, main_size)
-
-# Positions for corner triangles
-corner_centers = []
-for angle_deg in [90, 210, 330]:  # symmetric points around center
-    angle_rad = math.radians(angle_deg)
-    x = outer_center[0] + (main_size / 2) * math.cos(angle_rad)
-    y = outer_center[1] + (main_size / 2) * math.sin(angle_rad)
-    corner_centers.append((x, y))
-
-# Corner triangles (upright)
-corner_triangles = [
-    draw_equilateral_triangle(cx, cy, corner_size)
-    for (cx, cy) in corner_centers
-]
-
-# Center inverted triangle
-center_triangle = draw_equilateral_triangle(*outer_center, corner_size, rotation=180)
-
-# Create figure
-fig = go.Figure()
-
-# Outer triangle outline
-fig.add_trace(go.Scatter(
-    x=[x for x, y in outer_triangle],
-    y=[y for x, y in outer_triangle],
-    mode='lines',
-    line=dict(color='black', width=2),
-    showlegend=False
-))
-
-# Corner triangles
-for tri in corner_triangles:
-    fig.add_trace(go.Scatter(
-        x=[x for x, y in tri],
-        y=[y for x, y in tri],
-        mode='lines',
-        fill='toself',
-        line=dict(color='blue'),
-        fillcolor='blue',
-        opacity=0.6,
-        showlegend=False
-    ))
-
-# Center triangle
-fig.add_trace(go.Scatter(
-    x=[x for x, y in center_triangle],
-    y=[y for x, y in center_triangle],
-    mode='lines',
-    fill='toself',
-    line=dict(color='orange'),
-    fillcolor='orange',
-    opacity=0.8,
-    showlegend=False
-))
-
-# Layout adjustments
-fig.update_layout(
-    width=500,
-    height=500,
-    xaxis=dict(visible=False),
-    yaxis=dict(visible=False),
-    margin=dict(l=0, r=0, t=30, b=0),
-    title="Sierpiński Triangle (Base Iteration)"
-)
-
-st.plotly_chart(fig, use_container_width=False)
