@@ -140,10 +140,6 @@ df = pd.DataFrame({
 })
 st.line_chart(df.set_index("Day"))
 
-import pandas as pd
-import numpy as np
-import streamlit as st
-
 # Assuming num_days and final_savings_array are already defined
 st.subheader("Daily Savings Tracker")
 
