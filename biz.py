@@ -226,4 +226,20 @@ fig_tri.update_layout(
     height=400
 )
 
+# Dodaj tekst po trójkątach (kliknięć)
+fig_tri.add_annotation(
+    x=mid_x,
+    y=mid_y,
+    text=f"Kliknięć: {st.session_state.click_count}",
+    showarrow=False,
+    font=dict(size=16, color="black", family="Arial"),
+    xanchor="center",
+    yanchor="middle",
+    bgcolor="white",
+    bordercolor="black",
+    borderwidth=1,
+    layer="above"  # <-- kluczowe: umieść nad grafiką
+)
+
+
 st.plotly_chart(fig_tri, use_container_width=True)
