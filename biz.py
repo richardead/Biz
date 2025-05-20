@@ -170,6 +170,57 @@ styled_df = (
 st.write(styled_df)
 
 
+st.subheader("Sierpiński Triangle (2 levels)")
+
+def sierpinski_triangle(level):
+    # Początkowy trójkąt równoboczny
+    def midpoint(p1, p2):
+        return [(p1[0] + p2[0])/2, (p1[1] + p2[1])/2]
+
+    def divide(triangle, lvl):
+        if lvl == 0:
+            return [triangle]
+        else:
+            A, B, C = triangle
+            AB = midpoint(A, B)
+            BC = midpoint(B, C)
+            CA = midpoint(C, A)
+            # Podziel na 3 nowe trójkąty
+            return (
+                divide([A, AB, CA], lvl-1) +
+                divide([AB, B, BC], lvl-1) +
+                divide([CA, BC, C], lvl-1)
+            )
+
+    base_triangle = [[0, 0], [1, 0], [0.5, np.sqrt(3)/2]]
+    triangles = divide(base_triangle, level)
+    return triangles
+
+# Wygeneruj trójkąty
+triangles = sierpinski_triangle(level=2)
+
+# Rysuj
+fig_sierpinski = go.Figure()
+
+for tri in triangles:
+    x = [p[0] for p in tri] + [tri[0][0]]  # zamknij pętlę
+    y = [p[1] for p in tri] + [tri[0][1]]
+    fig_sierpinski.add_trace(go.Scatter(
+        x=x, y=y,
+        mode='lines',
+        line=dict(color='black'),
+        fill='toself'
+    ))
+
+fig_sierpinski.update_layout(
+    showlegend=False,
+    xaxis=dict(showgrid=False, zeroline=False, visible=False),
+    yaxis=dict(showgrid=False, zeroline=False, visible=False, scaleanchor='x', scaleratio=1),
+    margin=dict(t=10, b=10, l=10, r=10),
+    height=400
+)
+
+st.plotly_chart(fig_sierpinski, use_container_width=True)
 fib_levels = [0.382, 0.618]
 triangle_day_start = 1
 triangle_day_end = num_days
